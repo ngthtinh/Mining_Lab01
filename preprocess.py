@@ -51,13 +51,15 @@ def count_missing(data):
 
 
 # 3. Fill in the missing value
-def fill_missing(data, method):
+def fill_missing(data, method, output_path):
     if method == 'mean':
         pass
     elif method == 'median':
         pass
     elif method == 'mode':
         pass
+
+    write_data_to_file(output_path, data)
 
 
 # 4. Remove missing rows with a given missing scale threshold
@@ -109,7 +111,7 @@ def main():
     elif args.task == 'CountMissing':
         count_missing(data)
     elif args.task == 'FillMissing':
-        fill_missing(data, args.method)
+        fill_missing(data, args.method, args.output_path)
     elif args.task == 'RemoveRowMissing':
         remove_row_missing(data)
     elif args.task == 'RemoveColumnMissing':
