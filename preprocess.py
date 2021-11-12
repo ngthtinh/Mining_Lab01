@@ -84,8 +84,26 @@ def remove_column_missing(data):
 
 
 # 6. Remove duplicate instances
-def remove_duplicate(data):
-    print('Remove Duplicate')
+def remove_duplicate(data, output_path):
+    data_ans = [data[0], data[1]]
+
+    for i in range(2, len(data)):
+        is_unique = True
+        for j in range(1, i):
+            row_i = [item for item in data[i] if not pd.isna(item)]
+            row_i = row_i[1:]
+
+            row_j = [item for item in data[j] if not pd.isna(item)]
+            row_j = row_j[1:]
+
+            if row_i == row_j:
+                is_unique = False
+                break
+
+        if is_unique:
+            data_ans = data_ans + [data[i]]
+
+    write_data_to_file(output_path, data_ans)
 
 
 # 7. Normalize a numeric attribute
@@ -129,7 +147,7 @@ def main():
     elif args.task == 'RemoveColumnMissing':
         remove_column_missing(data)
     elif args.task == 'RemoveDuplicate':
-        remove_duplicate(data)
+        remove_duplicate(data, args.output_path)
     elif args.task == 'Normalize':
         normalize(data)
     elif args.task == 'Calculate':
