@@ -26,10 +26,10 @@ def read_data_from_file(input_path):
 # data: list
 def write_data_to_file(output_path, data):
     # Convert the list into a dataframe, the first row is attibute names, the other rows are core data
-    df = pd.DataFrame(data)
+    df = pd.DataFrame(data[1:], columns=data[0])
 
     # Write dataframe to CSV file
-    df.to_csv(output_path)
+    df.to_csv(output_path, index=False)
 
 
 # 1. List columns with missing data
@@ -96,15 +96,12 @@ def main():
                  'RemoveDuplicate', 'Normalize', 'Calculate'], help='Choose a task to do.')
     parser.add_argument('--input_path', required=True, help="input_path CSV file path.")
     parser.add_argument('--output_path', help="output_path CSV file path.")
-    parser.add_argument(
-        '--method',
-        choices=['mean', 'median', 'mode'], help='Choose a method to fill.')
+    parser.add_argument('--method', choices=['mean', 'median', 'mode'], help='Choose a method to fill.')
 
     args = parser.parse_args()
 
     # Read data from file
     data = read_data_from_file(args.input_path)
-    write_data_to_file(data, 'house_copy.csv')
 
     # Base on args, do the corresponding task
     if args.task == "ListMissing":
