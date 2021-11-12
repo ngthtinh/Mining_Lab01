@@ -26,7 +26,7 @@ def read_data_from_file(input_path):
 # data: list
 def write_data_to_file(output_path, data):
     # Convert the list into a dataframe, the first row is attibute names, the other rows are core data
-    df = pd.DataFrame(data[1:], columns=data[0])
+    df = pd.DataFrame(data)
 
     # Write dataframe to CSV file
     df.to_csv(output_path)
@@ -51,8 +51,13 @@ def count_missing(data):
 
 
 # 3. Fill in the missing value
-def fill_missing(data):
-    print('Fill Missing')
+def fill_missing(data, method):
+    if method == 'mean':
+        pass
+    elif method == 'median':
+        pass
+    elif method == 'mode':
+        pass
 
 
 # 4. Remove missing rows with a given missing scale threshold
@@ -91,11 +96,15 @@ def main():
                  'RemoveDuplicate', 'Normalize', 'Calculate'], help='Choose a task to do.')
     parser.add_argument('--input_path', required=True, help="input_path CSV file path.")
     parser.add_argument('--output_path', help="output_path CSV file path.")
+    parser.add_argument(
+        '--method',
+        choices=['mean', 'median', 'mode'], help='Choose a method to fill.')
 
     args = parser.parse_args()
 
     # Read data from file
     data = read_data_from_file(args.input_path)
+    write_data_to_file(data, 'house_copy.csv')
 
     # Base on args, do the corresponding task
     if args.task == "ListMissing":
@@ -103,7 +112,7 @@ def main():
     elif args.task == 'CountMissing':
         count_missing(data)
     elif args.task == 'FillMissing':
-        fill_missing(data)
+        fill_missing(data, args.method)
     elif args.task == 'RemoveRowMissing':
         remove_row_missing(data)
     elif args.task == 'RemoveColumnMissing':
