@@ -34,13 +34,18 @@ def write_data_to_file(output_path, data):
 
 # 1. List columns with missing data
 def list_missing(data):
-    j = 0
-    while j < len(data[0]):
-        for i in range(len(data)):
+    # j = 0
+    # while j < len(data[0]):
+    #     for i in range(len(data)):
+    #         if data[i][j] != data[i][j]:
+    #             print(data[0][j])
+    #             break
+    #     j += 1
+    for j in range(len(data[0])):
+        for i in range(1, len(data)):
             if data[i][j] != data[i][j]:
                 print(data[0][j])
                 break
-        j += 1
 
 
 # 2. Count the number of lines with missing data
