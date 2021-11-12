@@ -63,8 +63,19 @@ def fill_missing(data, method, output_path):
 
 
 # 4. Remove missing rows with a given missing scale threshold
-def remove_row_missing(data):
-    print('Remove Row Missing')
+def missing_rate(arr):
+    ans = 0
+
+    for item in arr:
+        if pd.isna(item):
+            ans = ans + 1
+
+    return ans / len(arr)
+
+
+def remove_row_missing(data, threshold, output_path):
+    data_ans = [ai for ai in data if missing_rate(ai) < threshold]
+    write_data_to_file(output_path, data_ans)
 
 
 # 5. Remove missing columns with a given missing scale threshold
@@ -99,6 +110,7 @@ def main():
     parser.add_argument('--input_path', required=True, help="input_path CSV file path.")
     parser.add_argument('--output_path', help="output_path CSV file path.")
     parser.add_argument('--method', choices=['mean', 'median', 'mode'], help='Choose a method to fill.')
+    parser.add_argument('--threshold', type=float, help='Threshold of Removing tasks.')
 
     args = parser.parse_args()
 
@@ -113,7 +125,7 @@ def main():
     elif args.task == 'FillMissing':
         fill_missing(data, args.method, args.output_path)
     elif args.task == 'RemoveRowMissing':
-        remove_row_missing(data)
+        remove_row_missing(data, args.threshold, args.output_path)
     elif args.task == 'RemoveColumnMissing':
         remove_column_missing(data)
     elif args.task == 'RemoveDuplicate':
