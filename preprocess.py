@@ -77,13 +77,15 @@ def Mode(data, col):
     return val_List[count_List.index(max(count_List))]
 
 
-# 0.6. Check Integer or Float of attribute
-def checkInteger(data, col):
+# 0.6. Check Value whether it is an Int,Float or Categorical
+def checkValue(data, col):
     for i in range(1, len(data)):
-        if type(data[i][col]) != type(1):
-            return False
-    
-    return True
+        if data[i][col] == data[i][col]:
+            if type(data[i][col]) == type(1):
+                return 1 #int
+            elif type(data[i][col]) == type(1.1):
+                return 0 #float
+            else: return -1 #categorical
 
 
 # 1. List columns with missing data
@@ -118,8 +120,8 @@ def count_missing(data):
 # 3. Fill in the missing value
 def fill_missing(data, method, column, output_path):
     if method == 'mean':
-        if type(data[1][column]) == type(1.1) or type(data[1][column]) == type(1):
-            if(checkInteger(data,column)):
+        if checkValue(data, column) >= 0:
+            if checkValue(data, column) == 1:
                 mean = round(Mean(data, column))
             else: mean = Mean(data, column)
 
@@ -130,10 +132,11 @@ def fill_missing(data, method, column, output_path):
         else: print("Wrong method for this type of value")
 
     elif method == 'median':
-        if type(data[1][column]) == type(1.1) or type(data[1][column]) == type(1):
-            if(checkInteger(data,column)):
+        if checkValue(data, column) >= 0:
+            if checkValue(data, column) == 1:
                 median = round(Median(data, column))
             else: median = Median(data, column)
+
             for i in range(1, len(data)):
                 if data[i][column] != data[i][column]:
                     data[i][column] = median
@@ -141,14 +144,13 @@ def fill_missing(data, method, column, output_path):
         else: print("Wrong method for this type of value")
 
     elif method == 'mode':
-        if type(data[1][column]) == type(1.1) or type(data[1][column]) == type(1):
-            print("Wrong method for this type of value")
-        else:
-            mode = Mode(data,column)
+        if checkValue(data ,column) == -1:
+            mode = Mode(data, column)
             for i in range(1, len(data)):
                 if data[i][column] != data[i][column]:
                     data[i][column] = mode
             write_data_to_file(output_path, data)
+        else: print("Wrong method for this type of value")
 
     
 # 4. Remove missing rows with a given missing scale threshold
