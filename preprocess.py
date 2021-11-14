@@ -31,6 +31,60 @@ def write_data_to_file(output_path, data):
     # Write dataframe to CSV file
     df.to_csv(output_path, index=False)
 
+# 0.3. Calculate mean of an attribute
+def Mean(data, col):
+    Count = 0
+    Sum = 0
+    for i in range(1, len(data)):
+        if data[i][col] != data[i][col]:
+            continue
+        Count += 1
+        Sum += data[i][col]
+    
+    return Sum / Count
+
+
+# 0.4. Calculate median of an attribute
+def Median(data, col):
+    val_List = []
+    for i in range(1, len(data)):
+        if data[i][col] != data[i][col]:
+            continue
+        val_List.append(data[i][col])
+    n = len(val_List)
+    val_List.sort()
+    if n % 2 == 0:
+        median1 = val_List[n//2]
+        median2 = val_List[n//2 - 1]
+        median = (median1 + median2)/2
+    else:
+        median = val_List[n//2]
+
+    return median
+
+
+# 0.5. Calculate mode of an attribute
+def Mode(data, col):
+    val_List = []
+    for i in range(1, len(data)):
+        if data[i][col] in val_List or data[i][col] != data[i][col]:
+            continue
+        else: val_List.append(data[i][col])
+    count_List = list(0 for j in range(0, len(val_List)))
+    for value in val_List:
+        count_List[val_List.index(value)] += 1
+
+    return val_List[count_List.index(max(count_List))]
+
+
+# 0.6. Check Integer or Float of attribute
+def checkInteger(data, col):
+    for i in range(1, len(data)):
+        if type(data[i][col]) != type(1):
+            return False
+    
+    return True
+
 
 # 1. List columns with missing data
 def list_missing(data):
@@ -62,17 +116,41 @@ def count_missing(data):
 
 
 # 3. Fill in the missing value
-def fill_missing(data, method, output_path):
+def fill_missing(data, method, column, output_path):
     if method == 'mean':
-        pass
+        if type(data[1][column]) == type(1.1) or type(data[1][column]) == type(1):
+            if(checkInteger(data,column)):
+                mean = round(Mean(data, column))
+            else: mean = Mean(data, column)
+
+            for i in range(1, len(data)):
+                if data[i][column] != data[i][column]:
+                    data[i][column] = mean
+            write_data_to_file(output_path, data)
+        else: print("Wrong method for this type of value")
+
     elif method == 'median':
-        pass
+        if type(data[1][column]) == type(1.1) or type(data[1][column]) == type(1):
+            if(checkInteger(data,column)):
+                median = round(Median(data, column))
+            else: median = Median(data, column)
+            for i in range(1, len(data)):
+                if data[i][column] != data[i][column]:
+                    data[i][column] = median
+            write_data_to_file(output_path, data)
+        else: print("Wrong method for this type of value")
+
     elif method == 'mode':
-        pass
+        if type(data[1][column]) == type(1.1) or type(data[1][column]) == type(1):
+            print("Wrong method for this type of value")
+        else:
+            mode = Mode(data,column)
+            for i in range(1, len(data)):
+                if data[i][column] != data[i][column]:
+                    data[i][column] = mode
+            write_data_to_file(output_path, data)
 
-    write_data_to_file(output_path, data)
-
-
+    
 # 4. Remove missing rows with a given missing scale threshold
 def missing_rate(arr):
     ans = 0
@@ -140,6 +218,7 @@ def main():
     parser.add_argument('--output_path', help="output_path CSV file path.")
     parser.add_argument('--method', choices=['mean', 'median', 'mode'], help='Choose a method to fill.')
     parser.add_argument('--threshold', type=float, help='Threshold of Removing tasks.')
+    parser.add_argument('--column', type=int, help='Choose a column to fill')
 
     args = parser.parse_args()
 
@@ -152,7 +231,7 @@ def main():
     elif args.task == 'CountMissing':
         count_missing(data)
     elif args.task == 'FillMissing':
-        fill_missing(data, args.method, args.output_path)
+        fill_missing(data, args.method, args.column, args.output_path)
     elif args.task == 'RemoveRowMissing':
         remove_row_missing(data, args.threshold, args.output_path)
     elif args.task == 'RemoveColumnMissing':
