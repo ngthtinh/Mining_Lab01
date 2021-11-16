@@ -31,63 +31,6 @@ def write_data_to_file(output_path, data):
     # Write dataframe to CSV file
     df.to_csv(output_path, index=False)
 
-# 0.3. Calculate mean of an attribute
-def Mean(data, col):
-    Count = 0
-    Sum = 0
-    for i in range(1, len(data)):
-        if data[i][col] != data[i][col]:
-            continue
-        Count += 1
-        Sum += data[i][col]
-    
-    return Sum / Count
-
-
-# 0.4. Calculate median of an attribute
-def Median(data, col):
-    val_List = []
-    for i in range(1, len(data)):
-        if data[i][col] != data[i][col]:
-            continue
-        val_List.append(data[i][col])
-    n = len(val_List)
-    val_List.sort()
-    if n % 2 == 0:
-        median1 = val_List[n//2]
-        median2 = val_List[n//2 - 1]
-        median = (median1 + median2)/2
-    else:
-        median = val_List[n//2]
-
-    return median
-
-
-# 0.5. Calculate mode of an attribute
-def Mode(data, col):
-    val_List = []
-    for i in range(1, len(data)):
-        if data[i][col] in val_List or data[i][col] != data[i][col]:
-            continue
-        else: val_List.append(data[i][col])
-    count_List = list(0 for j in range(0, len(val_List)))
-    for value in val_List:
-        count_List[val_List.index(value)] += 1
-
-    return val_List[count_List.index(max(count_List))]
-
-
-# 0.6. Check Value whether it is an Int,Float or Categorical
-def checkValue(data, col):
-    for i in range(1, len(data)):
-        if data[i][col] == data[i][col]:
-            if type(data[i][col]) == type(1):
-                return 1 #int
-            elif type(data[i][col]) == type(1.1):
-                return 0 #float
-            else: return -1 #categorical
-
-
 # 1. List columns with missing data
 def list_missing(data):
     # j = 0
@@ -118,6 +61,63 @@ def count_missing(data):
 
 
 # 3. Fill in the missing value
+# Calculate mean of an attribute
+def Mean(data, col):
+    Count = 0
+    Sum = 0
+    for i in range(1, len(data)):
+        if data[i][col] != data[i][col]:
+            continue
+        Count += 1
+        Sum += data[i][col]
+    
+    return Sum / Count
+
+
+# Calculate median of an attribute
+def Median(data, col):
+    val_List = []
+    for i in range(1, len(data)):
+        if data[i][col] != data[i][col]:
+            continue
+        val_List.append(data[i][col])
+    n = len(val_List)
+    val_List.sort()
+    if n % 2 == 0:
+        median1 = val_List[n//2]
+        median2 = val_List[n//2 - 1]
+        median = (median1 + median2)/2
+    else:
+        median = val_List[n//2]
+
+    return median
+
+
+# Calculate mode of an attribute
+def Mode(data, col):
+    val_List = []
+    for i in range(1, len(data)):
+        if data[i][col] in val_List or data[i][col] != data[i][col]:
+            continue
+        else: val_List.append(data[i][col])
+    count_List = list(0 for j in range(0, len(val_List)))
+    for value in val_List:
+        count_List[val_List.index(value)] += 1
+
+    return val_List[count_List.index(max(count_List))]
+
+
+# Check Value whether it is an Int,Float or Categorical
+def checkValue(data, col):
+    for i in range(1, len(data)):
+        if data[i][col] == data[i][col]:
+            if type(data[i][col]) == type(1):
+                return 1 #int
+            elif type(data[i][col]) == type(1.1):
+                return 0 #float
+            else: return -1 #categorical
+
+            
 def fill_missing(data, method, column, output_path):
     if method == 'mean':
         if checkValue(data, column) >= 0:
@@ -154,7 +154,7 @@ def fill_missing(data, method, column, output_path):
 
     
 # 4. Remove missing rows with a given missing scale threshold
-def missing_rate(arr):
+def missing_rate_row(arr):
     ans = 0
 
     for item in arr:
@@ -165,13 +165,29 @@ def missing_rate(arr):
 
 
 def remove_row_missing(data, threshold, output_path):
-    data_ans = [ai for ai in data if missing_rate(ai) < threshold]
+    data_ans = [ai for ai in data if missing_rate_row(ai) < threshold]
     write_data_to_file(output_path, data_ans)
 
 
 # 5. Remove missing columns with a given missing scale threshold
-def remove_column_missing(data):
-    print('Remove Column Missing')
+# Find missing rate of column
+def missing_rate_col(data, col):
+    count = 0
+    for i in range(1, len(data)):
+        if data[i][col] != data[i][col]:
+            count += 1
+    
+    return round((count / len(data)), 2)
+
+
+def remove_column_missing(data, threshold, output_path):
+    for j in range(len(data[0]) - 1, 0, -1):
+        if missing_rate_col(data, j) > threshold:
+            print(data[0][j])
+            for ai in data:
+                del ai[j]
+
+    write_data_to_file(output_path, data)
 
 
 # 6. Remove duplicate instances
@@ -237,7 +253,7 @@ def main():
     elif args.task == 'RemoveRowMissing':
         remove_row_missing(data, args.threshold, args.output_path)
     elif args.task == 'RemoveColumnMissing':
-        remove_column_missing(data)
+        remove_column_missing(data, args.threshold, args.output_path)
     elif args.task == 'RemoveDuplicate':
         remove_duplicate(data, args.output_path)
     elif args.task == 'Normalize':
