@@ -183,7 +183,6 @@ def missing_rate_col(data, col):
 def remove_column_missing(data, threshold, output_path):
     for j in range(len(data[0]) - 1, 0, -1):
         if missing_rate_col(data, j) > threshold:
-            print(data[0][j])
             for ai in data:
                 del ai[j]
 
