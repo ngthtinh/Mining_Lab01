@@ -213,8 +213,54 @@ def remove_duplicate(data, output_path):
 
 
 # 7. Normalize a numeric attribute
-def normalize(data):
-    print('Normalize')
+# find min, max of attribute
+def find_min_max(data, col):
+    val_List = []
+    for i in range(1, len(data)):
+        if data[i][col] == data[i][col]:
+            val_List.append(data[i][col])
+    return min(val_List), max(val_List)
+
+
+# min-max normalization
+def min_max_normalization(data, column, new_min, new_max, output_path):
+    if checkValue(data, column) >= 0:
+        minVal, maxVal = find_min_max(data, column)
+        for i in range(1, len(data)):
+            if data[i][column] == data[i][column]:
+                data[i][column] = ((data[i][column] - minVal)/(maxVal - minVal))*(new_max - new_min)+new_min
+        write_data_to_file(output_path, data)
+    else: print("This is categorical attribute")
+
+# count non-Nan value of attribute
+def count_value(data, col):
+    Count = 0
+    for i in range(1, len(data)):
+        if data[i][col] != data[i][col]:
+            continue
+        Count += 1
+    
+    return Count
+
+
+# find StdDev of attribute
+def find_standard_deviation(data, col):
+    Sum = 0
+    for i in range(1, len(data)):
+        if data[i][col] == data[i][col]:
+            Sum += (data[i][col] - Mean(data, col))**2
+    return (Sum / count_value(data, col))**(1/2)
+
+
+def z_score_normalization(data, column, output_path):
+    if checkValue(data, column) >= 0:
+        mean = Mean(data, column)
+        StdDev = find_standard_deviation(data, column)
+        for i in range(1, len(data)):
+            if data[i][column] == data[i][column]:
+                data[i][column] = (data[i][column] - mean)/StdDev
+        write_data_to_file(output_path, data)
+    else: print("This is categorical attribute")
 
 
 # 8. Calculate attribute expression value
@@ -230,12 +276,14 @@ def main():
     parser.add_argument(
         '--task', required=True,
         choices=['ListMissing', 'CountMissing', 'FillMissing', 'RemoveRowMissing', 'RemoveColumnMissing',
-                 'RemoveDuplicate', 'Normalize', 'Calculate'], help='Choose a task to do.')
+                 'RemoveDuplicate', 'MinMaxNormalization', 'Z_ScoreNormalization', 'Calculate'], help='Choose a task to do.')
     parser.add_argument('--input_path', required=True, help="input_path CSV file path.")
     parser.add_argument('--output_path', help="output_path CSV file path.")
     parser.add_argument('--method', choices=['mean', 'median', 'mode'], help='Choose a method to fill.')
     parser.add_argument('--threshold', type=float, help='Threshold of Removing tasks.')
-    parser.add_argument('--column', type=int, help='Choose a column to fill')
+    parser.add_argument('--column', type=int, help='Choose a column to fill.')
+    parser.add_argument('--new_min', type=float, help='Choose new min for normalization.')
+    parser.add_argument('--new_max', type=float, help='Choose new max for normalization.')
 
     args = parser.parse_args()
 
@@ -255,8 +303,10 @@ def main():
         remove_column_missing(data, args.threshold, args.output_path)
     elif args.task == 'RemoveDuplicate':
         remove_duplicate(data, args.output_path)
-    elif args.task == 'Normalize':
-        normalize(data)
+    elif args.task == 'MinMaxNormalization':
+        min_max_normalization(data, args.column, args.new_min, args.new_max, args.output_path)
+    elif args.task == 'Z_ScoreNormalization':
+        z_score_normalization(data, args.column, args.output_path)
     elif args.task == 'Calculate':
         calculate(data)
 
