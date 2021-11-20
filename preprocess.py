@@ -264,8 +264,191 @@ def z_score_normalization(data, column, output_path):
 
 
 # 8. Calculate attribute expression value
-def calculate(data):
-    print('Calculate')
+# Create a list of value of an attriute
+def list_value_of_an_attribute(data, col):
+    val_list = []
+    for i in range(1, len(data)):
+        val_list.append(data[i][col])
+    return val_list
+
+
+# Convert string in prefix into appropriate data type
+def modify_prefix(data, prefix):
+    for i in range(len(prefix)):
+        if prefix[i] == '+' or prefix[i] == '-' or prefix[i] == '*' or prefix[i] == '/':
+            continue
+        if prefix[i] in data[0]:
+            index = data[0].index(prefix[i])
+            prefix[i] = list_value_of_an_attribute(data, index) #convert attribute's name to attribute's list of value
+        elif prefix[i].isdecimal():
+            prefix[i] = int(prefix[i]) #if string is an integer
+        else:
+            prefix[i] = float(prefix[i]) #if string is a float
+
+    return prefix
+
+
+# split input expression
+def splitExpression(expression):
+    expression_list = []
+    operand = ''
+    for char in expression:
+        if char == ' ':
+            continue
+        elif char != '+' and char != '-' and char != '*' and char != '/':
+            operand += char
+        else:
+            expression_list.extend([operand, char])
+            operand = ''
+    expression_list.append(operand)
+
+    return expression_list
+
+
+# get the priority of operator
+def get_priority(operator):
+    if operator == '-' or operator == '+':
+        return 0
+    if operator == '*' or operator == '/':
+        return 1
+
+
+# convert infix expression to prefix expression
+def convert_infix_to_prefix(infix):
+    infix.reverse()
+    prefix = []
+    operator_stack = []
+    
+    for element in infix:
+        if element != '+' and element != '-' and element != '*' and element != '/':
+            prefix.append(element)
+        else:
+            if not operator_stack:
+                operator_stack.append(element)
+            elif get_priority(element) >= get_priority(operator_stack[-1]):
+                operator_stack.append(element)
+            elif get_priority(element) < get_priority(operator_stack[-1]):
+                while operator_stack and get_priority(operator_stack[-1]) > get_priority(element):
+                    # prefix.append(operator_stack[-1])
+                    # operator_stack.pop()
+                    prefix.append(operator_stack.pop())
+                operator_stack.append(element)
+    
+    operator_stack.reverse()
+    prefix.extend(operator_stack)
+
+    prefix.reverse()
+    return prefix
+
+
+# plus two operand
+def plus(op1, op2):
+    res = []
+    if type(op1) != type([]) or type(op2) != type([]): #if either op1 or op2 is a number not a list
+        if type(op1) == type([]):
+            for value in op1:
+                res.append(value + op2)
+        else:
+            for value in op2:
+                res.append(op1 + value)
+    else: #both op1 and op2 are lists
+        zip_op = zip(op1, op2)
+        for op1_i, op2_i in zip_op:
+            res.append(op1_i + op2_i)
+
+    return res
+
+
+# minus two operand
+def minus(op1, op2):
+    res = []
+    if type(op1) != type([]) or type(op2) != type([]): #if either op1 or op2 is a number not a list
+        if type(op1) == type([]):
+            for value in op1:
+                res.append(value - op2)
+        else:
+            for value in op2:
+                res.append(op1 - value)
+    else: #both op1 and op2 are lists
+        zip_op = zip(op1, op2)
+        for op1_i, op2_i in zip_op:
+            res.append(op1_i - op2_i)
+
+    return res
+
+
+# multiply two operand
+def multiply(op1, op2):
+    res = []
+    if type(op1) != type([]) or type(op2) != type([]): #if either op1 or op2 is a number not a list
+        if type(op1) == type([]):
+            for value in op1:
+                res.append(value * op2)
+        else:
+            for value in op2:
+                res.append(op1 * value)
+    else: #both op1 and op2 are lists
+        zip_op = zip(op1, op2)
+        for op1_i, op2_i in zip_op:
+            res.append(op1_i * op2_i)
+
+    return res
+
+
+# divide two operand
+def divide(op1, op2):
+    res = []
+    if type(op1) != type([]) or type(op2) != type([]): #if either op1 or op2 is a number not a list
+        if type(op1) == type([]):
+            for value in op1:
+                res.append(value / op2)
+        else:
+            for value in op2:
+                res.append(op1 / value)
+    else: #both op1 and op2 are lists
+        zip_op = zip(op1, op2)
+        for op1_i, op2_i in zip_op:
+            res.append(op1_i / op2_i)
+
+    return res
+
+
+# calculate the prefix expression
+def evaluate_prefix(prefix):
+    stack = []
+
+    for value in prefix[::-1]:
+        if value != '+' and value != '-' and value != '*' and value != '/':
+            stack.append(value)
+        else:
+            op1 = stack.pop()
+            op2 = stack.pop()
+
+            if value == '+':
+                stack.append(plus(op1, op2))
+            elif value == '-':
+                stack.append(minus(op1, op2))
+            if value == '*':
+                stack.append(multiply(op1, op2))
+            if value == '/':
+                stack.append(divide(op1, op2))
+
+    return stack.pop()
+
+
+def calculate(data, inputExpression, output_path):
+    infix = splitExpression(inputExpression)
+    prefix = convert_infix_to_prefix(infix)
+
+    prefix = modify_prefix(data, prefix)
+    res = evaluate_prefix(prefix)
+
+    data[0].append(inputExpression)
+    
+    for i in range(1, len(data)):
+        data[i].append(res[i - 1])
+    
+    write_data_to_file(output_path, data)
 
 
 # Main function
@@ -284,6 +467,7 @@ def main():
     parser.add_argument('--column', type=int, help='Choose a column to fill.')
     parser.add_argument('--new_min', type=float, help='Choose new min for normalization.')
     parser.add_argument('--new_max', type=float, help='Choose new max for normalization.')
+    parser.add_argument('--inputExpression', type=str, help='Input an expression')
 
     args = parser.parse_args()
 
@@ -308,7 +492,7 @@ def main():
     elif args.task == 'Z_ScoreNormalization':
         z_score_normalization(data, args.column, args.output_path)
     elif args.task == 'Calculate':
-        calculate(data)
+        calculate(data, args.inputExpression, args.output_path)
 
 
 # Entry point
