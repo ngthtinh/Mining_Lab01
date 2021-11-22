@@ -124,14 +124,16 @@ def mode(data, col):
 # col: int - index of attribute to calculate
 # return: 1 - Int, 0 - Float, -1 - Categorical
 def get_type(data, col):
-    for i in range(1, len(data)):              # Check all elements in column col
-        if data[i][col] == data[i][col]:       # Find the first element that is not a NaN value
-            if isinstance(data[i][col], str):  # If it's a string
-                return -1                      # It's a Categorical column
-            elif data[i][col].is_integer():    # If it's an Int value
-                return 1                       # It's an Int column
-            else:                              # Else
-                return 0                       # It's a Float column
+    for i in range(1, len(data)):                # Check all elements in column col
+        if data[i][col] == data[i][col]:         # Find the first element that is not a NaN value
+            if isinstance(data[i][col], str):    # If it's a string
+                return -1                        # It's a Categorical column
+            elif isinstance(data[i][col], int):  # If it's an Int value
+                return 1                         # It's an Int column
+            elif data[i][col].is_integer():      # If it's an Int value
+                return 1                         # It's an Int column
+            else:                                # Else
+                return 0                         # It's a Float column
 
 
 # 3. Fill in the missing values
