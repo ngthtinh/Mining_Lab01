@@ -4,12 +4,12 @@
 # 19127496 - Truong Quang Minh Nhat
 
 # Import libraries
-import argparse  # Agrument
+import argparse      # Command line arguments processing
 import pandas as pd  # Read and write CSV file
 
 
 # 0. Utility functions
-# 0.1. Read the data from a CVS file
+# 0.1. Read the data from a CSV file
 # input_path: string
 # return: list
 def read_data_from_file(input_path):
@@ -21,7 +21,7 @@ def read_data_from_file(input_path):
     return data
 
 
-# 0.2. Write the data
+# 0.2. Write the data to a CSV file
 # output_path: string
 # data: list
 def write_data_to_file(output_path, data):
@@ -33,404 +33,545 @@ def write_data_to_file(output_path, data):
 
 
 # 1. List columns with missing data
+# data: list
 def list_missing(data):
-    # j = 0
-    # while j < len(data[0]):
-    #     for i in range(len(data)):
-    #         if data[i][j] != data[i][j]:
-    #             print(data[0][j])
-    #             break
-    #     j += 1
-    for j in range(len(data[0])):
-        for i in range(1, len(data)):
-            if data[i][j] != data[i][j]:
-                print(data[0][j])
-                break
+    for j in range(len(data[0])):         # Columns traversal
+        for i in range(1, len(data)):     # Check all elements in that columns
+            if data[i][j] != data[i][j]:  # If it's different from itself, it's NaN data (missing value)
+                print(data[0][j])         # Print column name
+                break                     # Go to the next column
 
 
 # 2. Count the number of lines with missing data
+# data: list
 def count_missing(data):
-    ans = 0
+    ans = 0                    # Number of lines with missing data
 
-    for ai in data:
-        for aij in ai:
-            if aij != aij:
-                ans = ans + 1
-                break
+    for ai in data:            # Rows traversal
+        for aij in ai:         # Check all elements in that row
+            if aij != aij:     # If it's different from itself, it's NaN data (missing value)
+                ans = ans + 1  # Increase counter
+                break          # Go to the next row
 
-    print(ans)
+    print(ans)                 # Print answer
 
 
-# 3. Fill in the missing value
-# Calculate mean of an attribute
+# 3. Fill in the missing values
+# 3.Util_1. Calculate the mean value of an attribute
+# data: list
+# col: int - index of attribute to calculate
 def mean(data, col):
-    count = 0
-    s = 0
-    for i in range(1, len(data)):
-        if data[i][col] != data[i][col]:
-            continue
-        count += 1
-        s += data[i][col]
+    count = 0                             # Number of Non NaN values
+    sum_value = 0                         # Sum of Non NaN values
 
-    return s / count
+    for i in range(1, len(data)):         # Check all elements in column col
+        if data[i][col] != data[i][col]:  # If it's different from itself, it's NaN data (missing value)
+            continue                      # Go to the next element
+        count += 1                        # Else, increase counter
+        sum_value += data[i][col]         # And add it to sum value
+
+    return sum_value / count              # Return the mean value
 
 
-# Calculate median of an attribute
+# 3.Util_2. Calculate the median value of an attribute
+# data: list
+# col: int - index of attribute to calculate
 def median(data, col):
-    val_list = []
-    for i in range(1, len(data)):
-        if data[i][col] != data[i][col]:
-            continue
-        val_list.append(data[i][col])
-    n = len(val_list)
-    val_list.sort()
-    if n % 2 == 0:
-        median1 = val_list[n // 2]
-        median2 = val_list[n // 2 - 1]
-        ans = (median1 + median2) / 2
-    else:
-        ans = val_list[n // 2]
+    value_list = []                             # List of Non NaN values
 
-    return ans
+    for i in range(1, len(data)):               # Check all elements in column col
+        if data[i][col] != data[i][col]:        # If it's different from itself, it's NaN data (missing value)
+            continue                            # Go to the next element
+        value_list.append(data[i][col])         # Else, append it to value list
+
+    value_list.sort()                           # Sort the value list
+
+    n = len(value_list)                         # Get the number of values in value list
+    if n % 2 == 0:                              # If the number of values is even
+        median_left = value_list[n // 2]        #
+        median_right = value_list[n // 2 - 1]   # The answer is average of two middle elements
+        ans = (median_left + median_right) / 2  #
+    else:                                       # Else the number of values is odd
+        ans = value_list[n // 2]                # The answer is the middle element
+
+    return ans                                  # Return the median value
 
 
-# Calculate mode of an attribute
+# 3.Util_3. Calculate the mode value of an attribute
+# data: list
+# col: int - index of attribute to calculate
 def mode(data, col):
-    val_list = []
-    for i in range(1, len(data)):
-        if data[i][col] in val_list or data[i][col] != data[i][col]:
-            continue
-        else:
-            val_list.append(data[i][col])
-    count_list = list(0 for _ in range(0, len(val_list)))
-    for value in val_list:
-        count_list[val_list.index(value)] += 1
+    # Create value list
+    value_list = []                                                     # List of values
+    for i in range(1, len(data)):                                       # Check all elements in column col
+        if data[i][col] in value_list or data[i][col] != data[i][col]:  # If existed in value list, or NaN value
+            continue                                                    # Go to the next element
+        else:                                                           # Else
+            value_list.append(data[i][col])                             # Append it into value list
 
-    return val_list[count_list.index(max(count_list))]
+    # Create counting list corresponding to value list
+    count_list = [0 for _ in range(len(value_list))]                    # List of counters corresponding to value list
+    for i in range(1, len(data)):                                       # Check all elements in column col
+        if data[i][col] == data[i][col]:                                # If it's not an NaN value
+            count_list[value_list.index(data[i][col])] += 1             # Increase it's counter
 
-
-# Check Value whether it is an Int,Float or Categorical
-def check_value(data, col):
-    for i in range(1, len(data)):
-        if data[i][col] == data[i][col]:
-            if isinstance(data[i][col], int):
-                return 1  # int
-            elif isinstance(data[i][col], float):
-                return 0  # float
-            else:
-                return -1  # categorical
+    # Return the value which one has maximum counter
+    return value_list[count_list.index(max(count_list))]
 
 
-def fill_missing(data, method, column, output_path):
+# 3.Util_4. Get type of column whether it is Int, Float or Categorical
+# data: list
+# col: int - index of attribute to calculate
+# return: 1 - Int, 0 - Float, -1 - Categorical
+def get_type(data, col):
+    for i in range(1, len(data)):                  # Check all elements in column col
+        if data[i][col] == data[i][col]:           # Find the first element that is not a NaN value
+            if isinstance(data[i][col], int):      # If it's an Int value
+                return 1                           # It's an Int column
+            elif isinstance(data[i][col], float):  # Else if it's an Float value
+                return 0                           # It's a Float column
+            else:                                  # Else
+                return -1                          # It's a Categorical column
+
+
+# 3. Fill in the missing values
+# data: list
+# method: string - the method to process (mean, median or mode)
+# col: int - column index
+# output_path: string - the output path
+def fill_missing(data, method, col, output_path):
+    # Mean method
     if method == 'mean':
-        if check_value(data, column) >= 0:
-            if check_value(data, column) == 1:
-                mean_value = round(mean(data, column))
-            else:
-                mean_value = mean(data, column)
+        if get_type(data, col) >= 0:                       # Mean method only works on Numeric data
+            if get_type(data, col) == 1:                   # If it's Int column
+                mean_value = round(mean(data, col))        # Mean value should be rounded
+            else:                                          # Else
+                mean_value = mean(data, col)               # Mean value doesn't need to be rounded
 
-            for i in range(1, len(data)):
-                if data[i][column] != data[i][column]:
-                    data[i][column] = mean_value
-            write_data_to_file(output_path, data)
+            for i in range(1, len(data)):                  # Traversal all elements in column col
+                if data[i][col] != data[i][col]:           # If it's a NaN value (missing value)
+                    data[i][col] = mean_value              # Fill it
+
+            write_data_to_file(output_path, data)          # Save changes
         else:
-            print("Wrong method for this type of value")
+            print('Wrong method for this type of value!')  # Mean method doesn't work on Categorical data
 
+    # Median Method
     elif method == 'median':
-        if check_value(data, column) >= 0:
-            if check_value(data, column) == 1:
-                median_value = round(median(data, column))
-            else:
-                median_value = median(data, column)
+        if get_type(data, col) >= 0:                       # Median method only works on Numeric data
+            if get_type(data, col) == 1:                   # If it's Int column
+                median_value = round(median(data, col))    # Median value should be rounded
+            else:                                          # Else
+                median_value = median(data, col)           # Median value doesn't need to be rounded
 
-            for i in range(1, len(data)):
-                if data[i][column] != data[i][column]:
-                    data[i][column] = median_value
-            write_data_to_file(output_path, data)
+            for i in range(1, len(data)):                  # Traversal all elements in column col
+                if data[i][col] != data[i][col]:           # If it's a NaN value (missing value)
+                    data[i][col] = median_value            # Fill it
+
+            write_data_to_file(output_path, data)          # Save changes
         else:
-            print("Wrong method for this type of value")
+            print('Wrong method for this type of value!')  # Median method doesn't work on Categorical data
 
+    # Mode method
     elif method == 'mode':
-        if check_value(data, column) == -1:
-            mode_value = mode(data, column)
-            for i in range(1, len(data)):
-                if data[i][column] != data[i][column]:
-                    data[i][column] = mode_value
-            write_data_to_file(output_path, data)
+        if get_type(data, col) == -1:                      # Mode method only works on Categorical data
+            mode_value = mode(data, col)                   # Find mode value
+
+            for i in range(1, len(data)):                  # Traversal all elements in column col
+                if data[i][col] != data[i][col]:           # If it's a NaN value (missing value)
+                    data[i][col] = mode_value              # Fill it
+
+            write_data_to_file(output_path, data)          # Save changes
         else:
-            print("Wrong method for this type of value")
+            print('Wrong method for this type of value')   # Mode method doesn't work on Numeric data
 
 
-# 4. Remove missing rows with a given missing scale threshold
-def missing_rate_row(arr):
-    ans = 0
+# 4. Remove missing rows with a given missing rate threshold
+# 4.Util. Calculate missing rate of a row
+# row: list - the row to be calculated
+# return: float - (0; 1) - missing rate
+def missing_rate_row(row):
+    count = 0                  # Counting missing values in a row
 
-    for item in arr:
-        if pd.isna(item):
-            ans = ans + 1
+    for item in row:           # Check all elements in the row
+        if item != item:       # If it's different from itself, it's NaN data (missing value)
+            count = count + 1  # Increase counter
 
-    return ans / len(arr)
+    return count / len(row)    # Return missing rate
 
 
+# 4. Remove missing rows with a given missing rate threshold
+# data: list
+# threshold: float - (0; 1) - missing rate threshold
+# output_path: string
 def remove_row_missing(data, threshold, output_path):
+    # Choose rows which have missing rate smaller than threshold
     data_ans = [ai for ai in data if missing_rate_row(ai) < threshold]
+
+    # Save changes
     write_data_to_file(output_path, data_ans)
 
 
-# 5. Remove missing columns with a given missing scale threshold
-# Find missing rate of column
+# 5. Remove missing columns with a given missing rate threshold
+# 5.Util. Calculate missing rate of a column
+# data: list
+# column: int - index of the column to be calculated
+# return: float - (0; 1) - missing rate
 def missing_rate_col(data, col):
-    count = 0
-    for i in range(1, len(data)):
-        if data[i][col] != data[i][col]:
-            count += 1
+    count = 0                             # Counting missing values in a column
 
-    return round((count / len(data)), 2)
+    for i in range(1, len(data)):         # Check all elements in the column col
+        if data[i][col] != data[i][col]:  # If it's different from itself, it's NaN data (missing value)
+            count += 1                    # Increase counter
+
+    return count / (len(data) - 1)        # Return missing rate
 
 
+# 5. Remove missing columns with a given missing rate threshold
+# data: list
+# threshold: float - (0; 1) - missing rate threshold
+# output_path: string
 def remove_column_missing(data, threshold, output_path):
-    for j in range(len(data[0]) - 1, 0, -1):
-        if missing_rate_col(data, j) > threshold:
-            for ai in data:
-                del ai[j]
+    for j in range(len(data[0]) - 1, 0, -1):       # Delete from right to left, so the code will be cleaner
+        if missing_rate_col(data, j) > threshold:  # If missing rate of the column is greater than threshold
+            for ai in data:                        # With each row in data
+                del ai[j]                          # Delete the element number j-th
 
-    write_data_to_file(output_path, data)
+    write_data_to_file(output_path, data)          # Save changes
 
 
 # 6. Remove duplicate instances
+# data: list
+# output_pathL string
 def remove_duplicate(data, output_path):
-    data_ans = [data[0], data[1]]
+    data_ans = [data[0], data[1]]                               # The first row and the second row are kept
 
-    for i in range(2, len(data)):
-        is_unique = True
-        for j in range(1, i):
-            row_i = [item for item in data[i] if not pd.isna(item)]
-            row_i = row_i[1:]
+    for i in range(2, len(data)):                               # Traversal all rows
+        is_unique = True                                        # Supposing that the current row is unique
 
-            row_j = [item for item in data[j] if not pd.isna(item)]
-            row_j = row_j[1:]
+        row_i = [item for item in data[i] if item == item]      # Copy Non NaN item in the current row
+        row_i = row_i[1:]                                       # Exclude the first item, it's ID attribute
 
-            if row_i == row_j:
-                is_unique = False
-                break
+        # Compare the current row to the before rows
+        for j in range(1, i):                                   # j is before row index
+            row_j = [item for item in data[j] if item == item]  # Copy Non NaN item in the j-th row
+            row_j = row_j[1:]                                   # Exclude the first item, it's ID attribute
 
-        if is_unique:
-            data_ans = data_ans + [data[i]]
+            if row_i == row_j:                                  # If row i-th and row j-th are the same
+                is_unique = False                               # The current is not unique
+                break                                           # No need to compare with other rows
 
-    write_data_to_file(output_path, data_ans)
+        if is_unique:                                           # If the current row is unique
+            data_ans = data_ans + [data[i]]                     # Add it the answe data
+
+    write_data_to_file(output_path, data_ans)                   # Save changes
 
 
 # 7. Normalize a numeric attribute
-# find min, max of attribute
+# 7.a. Min-max method
+# 7.a.Util. Find min value and max value of an attribute
+# data: list
+# col: int - index of column to be calculated
+# return: int, int - the minimum value and the maximum value
 def find_min_max(data, col):
-    val_list = []
-    for i in range(1, len(data)):
-        if data[i][col] == data[i][col]:
-            val_list.append(data[i][col])
-    return min(val_list), max(val_list)
+    value_list = []                          # List of Non NaN values in column col
+
+    for i in range(1, len(data)):            # Check all elements in column col
+        if data[i][col] == data[i][col]:     # If it's a Non NaN value
+            value_list.append(data[i][col])  # Append it to value list
+
+    return min(value_list), max(value_list)  # Return the minimum value and the maximum value
 
 
-# min-max normalization
-def min_max_normalization(data, column, new_min, new_max, output_path):
-    if check_value(data, column) >= 0:
-        min_val, max_val = find_min_max(data, column)
+# 7.a. Min-max normalization
+# data: list
+# col: int - index of column to be normalized
+# new_min, new_max: int, int
+# output_path: string
+def min_max_normalization(data, col, new_min, new_max, output_path):
+    # Check for Numeric type
+    if get_type(data, col) >= 0:
+        # Find old minimum value and old maximum value
+        old_min, old_max = find_min_max(data, col)
+
+        # Update on all element on column col
         for i in range(1, len(data)):
-            if data[i][column] == data[i][column]:
-                data[i][column] = ((data[i][column] - min_val) / (max_val - min_val)) * (new_max - new_min) + new_min
+            if data[i][col] == data[i][col]:  # Only update Non NaN elements
+                data[i][col] = ((data[i][col] - old_min) / (old_max - old_min)) * (new_max - new_min) + new_min
+
+        # Save changes
         write_data_to_file(output_path, data)
+
+    # Min-max normalization method doesn't work on Categorical data
     else:
-        print("This is categorical attribute")
+        print('Cannot process on categorical attribute!')
 
 
-# count non-Nan value of attribute
+# 7.b.Util_1. Count Non NaN values of an attribute
+# data: list
+# col: int - index of the column to be calculated
+# return: int - number of Non NaN values
 def count_value(data, col):
-    count = 0
-    for i in range(1, len(data)):
-        if data[i][col] != data[i][col]:
-            continue
-        count += 1
+    count = 0                             # Number of Non NaN values in column col
 
-    return count
+    for i in range(1, len(data)):         # Check all elements in column col
+        if data[i][col] == data[i][col]:  # If it's a Non NaN value
+            count += 1                    # Increase counter
+
+    return count                          # Return number of Non NaN values
 
 
-# find StdDev of attribute
+# 7.b.Util_2. Find StdDev of an attribute
+# data: list
+# col: int - index of the column to be calculated
+# return: float - StdDev of that column
 def find_standard_deviation(data, col):
-    sum_value = 0
-    for i in range(1, len(data)):
-        if data[i][col] == data[i][col]:
-            sum_value += (data[i][col] - mean(data, col)) ** 2
-    return (sum_value / count_value(data, col)) ** (1 / 2)
+    sum_value = 0                                               # Sum value of column col
+    mean_value = mean(data, col)                                # Calculate the mean value of column col
+
+    for i in range(1, len(data)):                               # Check all elements in column col
+        if data[i][col] == data[i][col]:                        # If it's a Non NaN value
+            sum_value += (data[i][col] - mean_value) ** 2       # Add variance to sum value
+
+    return (sum_value / count_value(data, col)) ** (1 / 2)      # Return StdDev
 
 
-def z_score_normalization(data, column, output_path):
-    if check_value(data, column) >= 0:
-        mean_value = mean(data, column)
-        std_dev = find_standard_deviation(data, column)
-        for i in range(1, len(data)):
-            if data[i][column] == data[i][column]:
-                data[i][column] = (data[i][column] - mean_value) / std_dev
-        write_data_to_file(output_path, data)
+# 7.b. Z-score normalization
+# data: list
+# col: int - index of column to be normalized
+# output_path: string
+def z_score_normalization(data, col, output_path):
+    # Check for Numeric type
+    if get_type(data, col) >= 0:
+        # Calculate importants values: mean and StdDev
+        mean_value = mean(data, col)
+        std_dev = find_standard_deviation(data, col)
+
+        for i in range(1, len(data)):                                 # Check all elements in column col
+            if data[i][col] == data[i][col]:                          # If it's a Non NaN value
+                data[i][col] = (data[i][col] - mean_value) / std_dev  # Update it
+
+        write_data_to_file(output_path, data)                         # Save changes
+
+    # Z-score normalization method doesn't work on Categorical data
     else:
-        print("This is categorical attribute")
+        print('Cannot process on categorical attribute!')
 
 
 # 8. Calculate attribute expression value
-# Create a list of value of an attriute
-def list_value_of_an_attribute(data, col):
-    val_list = []
-    for i in range(1, len(data)):
-        val_list.append(data[i][col])
-    return val_list
+# 8.Util_1. Create a list of value of an attriute
+# data: list
+# col: int - index of column to be get values
+def get_value_list(data, col):
+    value_list = []                      # List of values in column col
+
+    for i in range(1, len(data)):      # Check all elements in column col
+        value_list.append(data[i][col])  # Append it to the list
+
+    return value_list                    # Return the value list
 
 
-# Convert string in prefix into appropriate data type
+# 8.Util_2. Convert a string in prefix into appropriate data type
+# data: list
+# prefix: string
 def modify_prefix(data, prefix):
+    # Traversal the prefix string
     for i in range(len(prefix)):
+        # If it's operator, skip it
         if prefix[i] == '+' or prefix[i] == '-' or prefix[i] == '*' or prefix[i] == '/':
             continue
+
+        # If it's an operand, convert prefix[i] to correspoding value list
         if prefix[i] in data[0]:
             index = data[0].index(prefix[i])
-            prefix[i] = list_value_of_an_attribute(data, index)  # convert attribute's name to attribute's list of value
+            prefix[i] = get_value_list(data, index)
+
+        # If it's a decimal value, parse it into integer
         elif prefix[i].isdecimal():
-            prefix[i] = int(prefix[i])  # if string is an integer
+            prefix[i] = int(prefix[i])
+
+        # Else, it's a float value, parse it into float
         else:
-            prefix[i] = float(prefix[i])  # if string is a float
+            prefix[i] = float(prefix[i])
 
     return prefix
 
 
-# split input expression
+# 8.Util_3. Split input expression
+# expression: string
 def split_expression(expression):
-    expression_list = []
-    operand = ''
-    for char in expression:
-        if char == ' ':
-            continue
-        elif char != '+' and char != '-' and char != '*' and char != '/':
-            operand += char
-        else:
-            expression_list.extend([operand, char])
-            operand = ''
-    expression_list.append(operand)
+    expression_list = []                                       # List of all elements in expression
+    operand = ''                                               # A string to store operands
 
-    return expression_list
+    for c in expression:                                       # Check all characters in expression
+        if c == ' ':                                           # If it's a blank
+            continue                                           # Skip it
+        elif c != '+' and c != '-' and c != '*' and c != '/':  # Else if it's an operand
+            operand += c                                       # Temporary add it into operand storage
+        else:                                                  # Else if it's an operator
+            expression_list.extend([operand, c])               # Update operand and operator
+            operand = ''                                       # Refresh the operand storage
+
+    expression_list.append(operand)                            # Append the last operand
+
+    return expression_list                                     # Return expression list
 
 
-# get the priority of operator
+# 8.Util_4. Get the priority of operator
+# operator: char
+# return: int [0, 1] - the priority of the operator, 1 is higher than 0
 def get_priority(operator):
-    if operator == '-' or operator == '+':
-        return 0
-    if operator == '*' or operator == '/':
-        return 1
+    if operator == '+' or operator == '-':  # If it's '+' or '-'
+        return 0                            # Low priority
+    if operator == '*' or operator == '/':  # If it's '*' or '/'
+        return 1                            # High priority
 
 
-# convert infix expression to prefix expression
+# 8.Util_5. Convert infix expression to prefix expression
+# infix: string
+# return: string - prefix expression
 def convert_infix_to_prefix(infix):
+    # Reverse the infix expression
     infix.reverse()
+
+    # Preparing for prefix expression
     prefix = []
     operator_stack = []
 
+    # Check all elements in infix expression
     for element in infix:
+        # If it's an operand, append it to prefix
         if element != '+' and element != '-' and element != '*' and element != '/':
             prefix.append(element)
+
+        # Else if it's an operator
         else:
+            # Push the operator if the stack is empty, or high priority
+            # If it's a low priority, process the high priority operators in the stack first
             if not operator_stack:
                 operator_stack.append(element)
             elif get_priority(element) >= get_priority(operator_stack[-1]):
                 operator_stack.append(element)
             elif get_priority(element) < get_priority(operator_stack[-1]):
                 while operator_stack and get_priority(operator_stack[-1]) > get_priority(element):
-                    # prefix.append(operator_stack[-1])
-                    # operator_stack.pop()
                     prefix.append(operator_stack.pop())
                 operator_stack.append(element)
 
+    # Combine prefix expression and operator stack
     operator_stack.reverse()
     prefix.extend(operator_stack)
 
+    # Reverse prefix expression and return the answer
     prefix.reverse()
     return prefix
 
 
-# plus two operand
+# 8.Util_6. Plus two operand
+# op1, op2: list
 def plus(op1, op2):
-    res = []
-    if (not isinstance(op1, list)) or (not isinstance(op2, list)):  # if either op1 or op2 is a number not a list
+    ans = []
+
+    if (not isinstance(op1, list)) or (not isinstance(op2, list)):  # If either op1 or op2 is a number not a list
+        # Do "Broadcast" calculate
         if isinstance(op1, list):
             for value in op1:
-                res.append(value + op2)
+                ans.append(value + op2)
         else:
             for value in op2:
-                res.append(op1 + value)
-    else:  # both op1 and op2 are lists
+                ans.append(op1 + value)
+    else:  # Else both op1 and op2 are lists
         zip_op = zip(op1, op2)
         for op1_i, op2_i in zip_op:
-            res.append(op1_i + op2_i)
+            ans.append(op1_i + op2_i)
 
-    return res
+    return ans
 
 
-# minus two operand
+# 8.Util_7. Minus two operand
+# op1, op2: list
 def minus(op1, op2):
-    res = []
-    if (not isinstance(op1, list)) or (not isinstance(op2, list)):  # if either op1 or op2 is a number not a list
+    ans = []
+
+    if (not isinstance(op1, list)) or (not isinstance(op2, list)):  # If either op1 or op2 is a number not a list
+        # Do "Broadcast" calculate
         if isinstance(op1, list):
             for value in op1:
-                res.append(value - op2)
+                ans.append(value - op2)
         else:
             for value in op2:
-                res.append(op1 - value)
-    else:  # both op1 and op2 are lists
+                ans.append(op1 - value)
+    else:  # Else both op1 and op2 are lists
         zip_op = zip(op1, op2)
         for op1_i, op2_i in zip_op:
-            res.append(op1_i - op2_i)
+            ans.append(op1_i - op2_i)
 
-    return res
+    return ans
 
 
-# multiply two operand
+# 8.Util_8. Multiply two operand
+# op1, op2: list
 def multiply(op1, op2):
-    res = []
-    if (not isinstance(op1, list)) or (not isinstance(op2, list)):  # if either op1 or op2 is a number not a list
+    ans = []
+
+    if (not isinstance(op1, list)) or (not isinstance(op2, list)):  # If either op1 or op2 is a number not a list
+        # Do "Broadcast" calculate
         if isinstance(op1, list):
             for value in op1:
-                res.append(value * op2)
+                ans.append(value * op2)
         else:
             for value in op2:
-                res.append(op1 * value)
-    else:  # both op1 and op2 are lists
+                ans.append(op1 * value)
+    else:  # Else both op1 and op2 are lists
         zip_op = zip(op1, op2)
         for op1_i, op2_i in zip_op:
-            res.append(op1_i * op2_i)
+            ans.append(op1_i * op2_i)
 
-    return res
+    return ans
 
 
-# divide two operand
+# 8.Util_9. Devide two operand
+# op1, op2: list
 def divide(op1, op2):
-    res = []
-    if (not isinstance(op1, list)) or (not isinstance(op2, list)):  # if either op1 or op2 is a number not a list
+    ans = []
+
+    if (not isinstance(op1, list)) or (not isinstance(op2, list)):  # If either op1 or op2 is a number not a list
+        # Do "Broadcast" calculate
         if isinstance(op1, list):
             for value in op1:
-                res.append(value / op2)
+                if op2 == 0:
+                    ans.append('')
+                else:
+                    ans.append(value // op2)
         else:
             for value in op2:
-                res.append(op1 / value)
-    else:  # both op1 and op2 are lists
+                if value == 0:
+                    ans.append('')
+                else:
+                    ans.append(op1 // value)
+    else:  # Else both op1 and op2 are lists
         zip_op = zip(op1, op2)
         for op1_i, op2_i in zip_op:
-            res.append(op1_i / op2_i)
+            if op2_i == 0:
+                ans.append('')
+            else:
+                ans.append(op1_i // op2_i)
 
-    return res
+    return ans
 
 
-# calculate the prefix expression
-def evaluate_prefix(prefix):
+# 8.Util_10. Calculate the prefix expression
+# prefix: list
+def calculate_prefix(prefix):
+    # Prepare a stack of operands
     stack = []
 
+    # Traversal all item in prefix expression in reverse order
     for value in prefix[::-1]:
+        # If it's an operand, push it into th stack
         if value != '+' and value != '-' and value != '*' and value != '/':
             stack.append(value)
+
+        # Else if it's an operator, pop the two latest operands and calculate them
         else:
             op1 = stack.pop()
             op2 = stack.pop()
@@ -444,21 +585,32 @@ def evaluate_prefix(prefix):
             if value == '/':
                 stack.append(divide(op1, op2))
 
+    # Return the last one item in the stack, it is the answer
     return stack.pop()
 
 
+# 8. Calculate attributes expression
+# data: list
+# input_expression: string
+# output_expression: string
 def calculate(data, input_expression, output_path):
+    # Get infix expression
     infix = split_expression(input_expression)
+
+    # Get prefix expression
     prefix = convert_infix_to_prefix(infix)
-
     prefix = modify_prefix(data, prefix)
-    res = evaluate_prefix(prefix)
 
+    # Calculate the prefix expression, save it to a list named ans
+    ans = calculate_prefix(prefix)
+
+    # Append new data
     data[0].append(input_expression)
 
     for i in range(1, len(data)):
-        data[i].append(res[i - 1])
+        data[i].append(ans[i - 1])
 
+    # Save changes
     write_data_to_file(output_path, data)
 
 
@@ -479,7 +631,7 @@ def main():
     parser.add_argument('--column', type=int, help='Choose a column to fill.')
     parser.add_argument('--new_min', type=float, help='Choose new min for normalization.')
     parser.add_argument('--new_max', type=float, help='Choose new max for normalization.')
-    parser.add_argument('--inputExpression', type=str, help='Input an expression')
+    parser.add_argument('--input_expression', type=str, help='Input an expression')
 
     args = parser.parse_args()
 
@@ -504,7 +656,7 @@ def main():
     elif args.task == 'Z_ScoreNormalization':
         z_score_normalization(data, args.column, args.output_path)
     elif args.task == 'Calculate':
-        calculate(data, args.inputExpression, args.output_path)
+        calculate(data, args.input_expression, args.output_path)
 
 
 # Entry point
